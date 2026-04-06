@@ -1,0 +1,8 @@
+# Personal memory data — never commit
+/MEMORIES.md
+/decisions.md
+/projects/
+/known-issues/
+
+# OS
+.DS_Store
