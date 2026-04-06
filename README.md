@@ -88,16 +88,16 @@ git clone https://github.com/kos-platform/claude-memory.git ~/dev/claude-memory
 cd ~/dev/claude-memory
 
 # Preview what will be installed
-./install.sh --dry-run
+./install.sh --user-name "YourName" --dry-run
 
 # Install (safe — skips existing files)
-./install.sh
+./install.sh --user-name "YourName"
 
 # Install and overwrite existing files
-./install.sh --force
+./install.sh --user-name "YourName" --force
 
 # Also install memory seed
-./install.sh --with-memory
+./install.sh --user-name "YourName" --with-memory
 ```
 
 ## Optional memory-seed mode
@@ -116,11 +116,13 @@ If you want to commit memory-seed to the repo (e.g., for a private repo), remove
 
 ## Safety and overwrite behavior
 
+- **--user-name**: required. Your name, used in prompts and hooks that address you personally.
 - **Default mode**: never overwrites existing files. Prints a warning and skips.
 - **--force**: overwrites existing files without prompting.
 - **--dry-run**: prints every action without touching the filesystem.
 - **Never deletes** anything on the target machine.
 - **Never copies secrets** — credentials, tokens, and env files are excluded at the source.
+- **Placeholder replacement**: `__HOME__` and `__USER_NAME__` in bootstrap files are replaced with your actual home directory and name during install.
 - If a target repo directory doesn't exist, the installer warns and skips that repo's CLAUDE.md rather than failing.
 
 ## Post-install checks

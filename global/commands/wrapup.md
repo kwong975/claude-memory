@@ -38,11 +38,11 @@ Package session work into a structured proposal: facts about what changed, propo
 
 **Two categories — keep them distinct:**
 
-1. **Explicit learnings** — things Kelly directly stated as corrections or preferences during this session. These are eligible for write proposals.
-   - Must be a direct quote or clear paraphrase of something Kelly said.
+1. **Explicit learnings** — things __USER_NAME__ directly stated as corrections or preferences during this session. These are eligible for write proposals.
+   - Must be a direct quote or clear paraphrase of something __USER_NAME__ said.
    - Format: `[correction]` or `[preference]` tag + the learning.
 
-2. **Possible inferred learnings** — patterns you noticed but Kelly didn't explicitly state. These are shown for awareness only, NOT eligible for write proposals in V1.
+2. **Possible inferred learnings** — patterns you noticed but __USER_NAME__ didn't explicitly state. These are shown for awareness only, NOT eligible for write proposals in V1.
    - Format: `[observed, not confirmed]` tag + what you noticed.
 
 Before proposing any learning for write, check `~/dev/claude-memory/MEMORIES.md` for duplicates. Skip if already captured.
@@ -73,8 +73,8 @@ Note any:
 - [ ] <new discovered item>
 
 ### Explicit Learnings
-- [correction] "<what Kelly said>"
-- [preference] "<what Kelly said>"
+- [correction] "<what __USER_NAME__ said>"
+- [preference] "<what __USER_NAME__ said>"
 
 ### Observed (not confirmed)
 - [observed] <pattern noticed — for awareness, no write proposed>
@@ -110,4 +110,4 @@ After writing, show a brief confirmation of what was written and where.
 - Never write to: `~/.claude/CLAUDE.md`, `~/dev/CLAUDE.md`, `settings.json`, hook scripts, rules files, known-issues files.
 - If no meaningful work happened (no commits, no file edits, no significant discussion), say "Nothing significant to wrap up" and stop.
 - Distinguish facts (objective, verifiable) from proposals (suggested updates) from learnings (corrections/preferences). Never mix them.
-- Only explicit learnings (things Kelly directly said) are eligible for MEMORIES.md writes. Inferred/observed items are shown for awareness only.
+- Only explicit learnings (things __USER_NAME__ directly said) are eligible for MEMORIES.md writes. Inferred/observed items are shown for awareness only.

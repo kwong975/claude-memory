@@ -23,7 +23,7 @@
  *
  * Calibration:
  *   - No automated JSONL logging (type: "prompt" doesn't support it)
- *   - Kelly reviews warn outputs during sessions for 3 weeks
+ *   - __USER_NAME__ reviews warn outputs during sessions for 3 weeks
  *   - If false-positive rate >20%, narrow rubric further
  *   - Only promote to enforce when rate <5%
  *

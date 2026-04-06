@@ -2,12 +2,13 @@
 # install.sh — Install the Claude Code bootstrap onto a machine
 #
 # Usage:
-#   ./install.sh                  # Install global + workspace + repo-claudes
-#   ./install.sh --with-memory    # Also install memory-seed
-#   ./install.sh --dry-run        # Print actions without copying
-#   ./install.sh --force          # Overwrite existing files without prompting
+#   ./install.sh --user-name "Kelly"    # Install with user name for personalization
+#   ./install.sh --dry-run              # Print actions without copying
+#   ./install.sh --force                # Overwrite existing files without prompting
+#   ./install.sh --with-memory          # Also install memory-seed
 #
 # Safe by default: never deletes, never overwrites without confirmation.
+# Replaces __HOME__ and __USER_NAME__ placeholders in installed files.
 
 set -euo pipefail
 
@@ -17,28 +18,41 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DRY_RUN=false
 FORCE=false
 WITH_MEMORY=false
+USER_NAME=""
 
 # --- Parse args ---
-for arg in "$@"; do
-  case "$arg" in
-    --dry-run)    DRY_RUN=true ;;
-    --force)      FORCE=true ;;
-    --with-memory) WITH_MEMORY=true ;;
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --dry-run)     DRY_RUN=true; shift ;;
+    --force)       FORCE=true; shift ;;
+    --with-memory) WITH_MEMORY=true; shift ;;
+    --user-name)   USER_NAME="$2"; shift 2 ;;
     --help|-h)
-      echo "Usage: ./install.sh [--dry-run] [--force] [--with-memory]"
+      echo "Usage: ./install.sh --user-name <name> [--dry-run] [--force] [--with-memory]"
       echo ""
+      echo "  --user-name <n> Your name (used in prompts/hooks that address you)"
       echo "  --dry-run       Print what would be done without copying"
       echo "  --force         Overwrite existing files without prompting"
       echo "  --with-memory   Also install memory-seed (MEMORIES.md, projects/, known-issues/)"
       exit 0
       ;;
     *)
-      echo "Unknown option: $arg"
+      echo "Unknown option: $1"
       echo "Run ./install.sh --help for usage"
       exit 1
       ;;
   esac
 done
+
+# --- Prompt for user name if not provided ---
+if [ -z "$USER_NAME" ]; then
+  printf "Your name (for personalization in prompts/hooks): "
+  read -r USER_NAME
+  if [ -z "$USER_NAME" ]; then
+    echo "Error: user name is required. Use --user-name <name> or enter it when prompted."
+    exit 1
+  fi
+fi
 
 # --- Target paths ---
 GLOBAL_TARGET="$HOME/.claude"
@@ -81,7 +95,8 @@ copy_file() {
     return
   fi
 
-  cp "$src" "$dst"
+  # Copy and replace placeholders
+  sed -e "s|__HOME__|$HOME|g" -e "s|__USER_NAME__|$USER_NAME|g" "$src" > "$dst"
   log_action "$src -> $dst"
   COPIED=$((COPIED + 1))
 }
@@ -115,7 +130,7 @@ copy_dir() {
       SKIPPED=$((SKIPPED + 1))
     else
       mkdir -p "$(dirname "$target")"
-      cp "$file" "$target"
+      sed -e "s|__HOME__|$HOME|g" -e "s|__USER_NAME__|$USER_NAME|g" "$file" > "$target"
       log_action "$file -> $target"
       COPIED=$((COPIED + 1))
     fi
@@ -124,6 +139,9 @@ copy_dir() {
 
 # --- Header ---
 echo "=== Claude Code Bootstrap Installer ==="
+echo ""
+echo "User:  $USER_NAME"
+echo "Home:  $HOME"
 echo ""
 if $DRY_RUN; then
   echo "MODE: dry-run (no files will be copied)"

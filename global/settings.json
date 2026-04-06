@@ -1,7 +1,7 @@
 {
   "env": {
-    "DEV_DIR": "/Users/lap16618/dev",
-    "MEMORY_DIR": "/Users/lap16618/dev/claude-memory"
+    "DEV_DIR": "__HOME__/dev",
+    "MEMORY_DIR": "__HOME__/dev/claude-memory"
   },
   "hooks": {
     "PreToolUse": [
@@ -10,7 +10,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun /Users/lap16618/dev/config/hooks/SafetyNet.hook.ts"
+            "command": "bun __HOME__/dev/config/hooks/SafetyNet.hook.ts"
           }
         ]
       }
@@ -21,7 +21,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun /Users/lap16618/dev/config/hooks/AutoLint.hook.ts"
+            "command": "bun __HOME__/dev/config/hooks/AutoLint.hook.ts"
           }
         ]
       }
@@ -32,7 +32,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun /Users/lap16618/dev/config/hooks/LoadProjects.hook.ts"
+            "command": "bun __HOME__/dev/config/hooks/LoadProjects.hook.ts"
           }
         ]
       },
@@ -41,7 +41,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun /Users/lap16618/dev/config/hooks/ShowProjects.hook.ts",
+            "command": "bun __HOME__/dev/config/hooks/ShowProjects.hook.ts",
             "statusMessage": "Loading projects..."
           }
         ]
@@ -53,7 +53,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun /Users/lap16618/dev/config/hooks/StopGate.hook.ts"
+            "command": "bun __HOME__/dev/config/hooks/StopGate.hook.ts"
           }
         ]
       },
@@ -62,7 +62,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun /Users/lap16618/dev/config/hooks/CompletionCheck.hook.ts"
+            "command": "bun __HOME__/dev/config/hooks/CompletionCheck.hook.ts"
           }
         ]
       }
@@ -73,7 +73,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun /Users/lap16618/dev/config/hooks/SessionEndReminder.hook.ts"
+            "command": "bun __HOME__/dev/config/hooks/SessionEndReminder.hook.ts"
           }
         ]
       }

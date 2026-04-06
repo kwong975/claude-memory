@@ -20,6 +20,13 @@ hooks_target        = ~/dev/config/hooks/
 repo_base_target    = ~/dev/kos-platform/
 memory_target       = ~/dev/claude-memory/
 
+# --- Personalization ---
+# These placeholders are replaced during install:
+#   __HOME__      → replaced with $HOME (e.g., /Users/yourname)
+#   __USER_NAME__ → replaced with --user-name value (e.g., Kelly)
+
+user_name           = ""       # Required. Use --user-name flag.
+
 # --- Options ---
 
 include_memory_seed = false    # Set to true or use --with-memory flag
