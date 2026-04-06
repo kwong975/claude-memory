@@ -155,7 +155,6 @@ const corrections = loadCorrections();
 const projects = loadProjectSummaries();
 
 const references = [
-  `📎 Architectural decisions: ${memoryDir}/decisions.md`,
   `📎 Full memories: ${memoryDir}/MEMORIES.md`,
   `📎 Known issues: ${memoryDir}/known-issues/`,
 ].join("\n");

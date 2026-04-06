@@ -10,7 +10,7 @@ TEMPLATES="$SCRIPT_DIR/templates"
 echo "Setting up claude-memory..."
 
 # Create personal files from templates (skip if they already exist)
-for file in MEMORIES.md decisions.md; do
+for file in MEMORIES.md; do
   if [ ! -f "$SCRIPT_DIR/$file" ]; then
     cp "$TEMPLATES/$file" "$SCRIPT_DIR/$file"
     echo "  Created $file"
@@ -35,8 +35,7 @@ echo "Done! Your memory files are ready."
 echo ""
 echo "Next steps:"
 echo "  1. Edit MEMORIES.md — fill in your name, role, and preferences"
-echo "  2. Edit decisions.md — add your first architectural decisions"
-echo "  3. Create your first project: cp templates/projects/_template.md projects/my-project.md"
+echo "  2. Create your first project: cp templates/projects/_template.md projects/my-project.md"
 echo ""
 echo "Point Claude Code to this directory by adding to ~/.claude/settings.json:"
 echo "  \"env\": { \"MEMORY_DIR\": \"$SCRIPT_DIR\" }"

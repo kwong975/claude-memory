@@ -13,7 +13,6 @@ claude-memory is a structured alternative — explicit files with clear schemas 
 ## What it does
 
 - **Remembers you** — your role, preferences, how you like to work, corrections you've made
-- **Tracks decisions** — architectural and tooling decisions that apply across projects
 - **Manages projects** — active projects with next steps, logs, and notes files
 - **Tracks known issues** — per-repo gotchas that persist across sessions
 - **Learns from corrections** — when you correct Claude, it proposes a memory update so it doesn't repeat the mistake
@@ -68,7 +67,6 @@ Session end (/wrapup)
 ```
 claude-memory/
 ├── MEMORIES.md              # Your preferences, corrections, calibrations (gitignored)
-├── decisions.md             # Cross-project architectural decisions (gitignored)
 ├── projects/                # Active project tracking (gitignored)
 │   ├── my-project.md        # Project: next steps + log
 │   ├── my-project-notes.md  # Detailed findings and reasoning
@@ -88,7 +86,6 @@ claude-memory/
 │       └── log.ts
 ├── templates/               # Starting templates for new files
 │   ├── MEMORIES.md
-│   ├── decisions.md
 │   ├── projects/_template.md
 │   └── known-issues/_template.md
 └── examples/                # Populated examples showing real usage
@@ -101,7 +98,6 @@ claude-memory/
 | File | Purpose | Updated by |
 |------|---------|------------|
 | `MEMORIES.md` | Who you are, how you work, corrections | `/wrapup` (with approval) |
-| `decisions.md` | Technical decisions that apply across projects | Manual or `/wrapup` |
 | `projects/<name>.md` | Active project tracking (frontmatter + Next + Log) | `/wrapup` (with approval) |
 | `projects/<name>-notes.md` | Detailed reasoning and findings | `/wrapup` or manual |
 | `known-issues/<repo>.md` | Per-repo gotchas and workarounds | Manual |
@@ -221,7 +217,6 @@ Reference the memory system in your project or global `CLAUDE.md`:
 ## Persistent Memory
 
 - Preferences, corrections, calibrations → `claude-memory/MEMORIES.md`
-- Technical decisions → `claude-memory/decisions.md`
 - Always propose exact text and wait for approval before writing to memory files.
 
 ## Project Tracking
