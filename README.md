@@ -28,7 +28,7 @@ claude-memory is a structured alternative — explicit files with clear schemas 
 
 ```bash
 # Clone the repo
-git clone https://github.com/YOUR_USERNAME/claude-memory.git ~/dev/claude-memory
+git clone https://github.com/kwong975/claude-memory.git ~/dev/claude-memory
 
 # Run setup to create your personal memory files from templates
 cd ~/dev/claude-memory
@@ -67,14 +67,25 @@ Session end (/wrapup)
 
 ```
 claude-memory/
-├── MEMORIES.md              # Your preferences, corrections, calibrations
-├── decisions.md             # Cross-project architectural decisions
-├── projects/
-│   ├── my-project.md        # Active project: next steps + log
+├── MEMORIES.md              # Your preferences, corrections, calibrations (gitignored)
+├── decisions.md             # Cross-project architectural decisions (gitignored)
+├── projects/                # Active project tracking (gitignored)
+│   ├── my-project.md        # Project: next steps + log
 │   ├── my-project-notes.md  # Detailed findings and reasoning
 │   └── archive/             # Completed projects
-├── known-issues/
-│   └── repo-name.md         # Per-repo gotchas and workarounds
+├── known-issues/            # Per-repo gotchas (gitignored)
+│   └── repo-name.md
+├── hooks/                   # Claude Code hook scripts
+│   ├── LoadProjects.hook.ts
+│   ├── ShowProjects.hook.ts
+│   ├── SafetyNet.hook.ts
+│   ├── AutoLint.hook.ts
+│   ├── StopGate.hook.ts
+│   ├── CompletionCheck.hook.ts
+│   ├── SessionEndReminder.hook.ts
+│   └── lib/                 # Shared utilities
+│       ├── paths.ts
+│       └── log.ts
 ├── templates/               # Starting templates for new files
 │   ├── MEMORIES.md
 │   ├── decisions.md
@@ -135,27 +146,72 @@ If you use [Claude Code slash commands](https://docs.anthropic.com/en/docs/claud
 - `/audit` — checks system health (file coverage, budgets, hooks)
 - `/design` — structured design thinking before implementation
 
-### Hooks (optional)
+### Hooks (included)
 
-[Claude Code hooks](https://docs.anthropic.com/en/docs/claude-code/hooks) can automate memory loading:
+[Claude Code hooks](https://docs.anthropic.com/en/docs/claude-code/hooks) automate memory loading. Ready-to-use scripts are in `hooks/`:
 
-- **SessionStart** — load active projects and corrections into context
-- **Stop** — remind Claude to check for memory updates
-- **UserPromptSubmit** — detect session-end signals and prompt for wrapup
+| Hook | Event | What it does |
+|------|-------|-------------|
+| `LoadProjects.hook.ts` | SessionStart | Loads corrections + active project summaries into context |
+| `ShowProjects.hook.ts` | SessionStart | Displays active projects in terminal |
+| `SafetyNet.hook.ts` | PreToolUse (Bash) | Blocks destructive commands, warns on wrong package managers |
+| `AutoLint.hook.ts` | PostToolUse (Edit/Write) | Auto-formats files after edits (ruff for Python, prettier for TS) |
+| `StopGate.hook.ts` | Stop | Runs lint + tests when Claude stops, warns on failures |
+| `CompletionCheck.hook.ts` | Stop | Catches false completion claims (says "done" with no output) |
+| `SessionEndReminder.hook.ts` | UserPromptSubmit | Prompts for project updates when you signal session end |
 
-See the [companion hooks repo](https://github.com/YOUR_USERNAME/claude-code-hooks) for ready-to-use hook scripts. *(Coming soon)*
-
-### Settings
-
-Add to `~/.claude/settings.json`:
+To install, add to `~/.claude/settings.json`:
 
 ```json
 {
   "env": {
-    "MEMORY_DIR": "/absolute/path/to/claude-memory"
+    "DEV_DIR": "/path/to/your/dev/directory",
+    "MEMORY_DIR": "/path/to/claude-memory"
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [{ "type": "command", "command": "bun /path/to/claude-memory/hooks/LoadProjects.hook.ts" }]
+      },
+      {
+        "matcher": "",
+        "hooks": [{ "type": "command", "command": "bun /path/to/claude-memory/hooks/ShowProjects.hook.ts" }]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [{ "type": "command", "command": "bun /path/to/claude-memory/hooks/SafetyNet.hook.ts" }]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [{ "type": "command", "command": "bun /path/to/claude-memory/hooks/AutoLint.hook.ts" }]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [{ "type": "command", "command": "bun /path/to/claude-memory/hooks/StopGate.hook.ts" }]
+      },
+      {
+        "matcher": "",
+        "hooks": [{ "type": "command", "command": "bun /path/to/claude-memory/hooks/CompletionCheck.hook.ts" }]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [{ "type": "command", "command": "bun /path/to/claude-memory/hooks/SessionEndReminder.hook.ts" }]
+      }
+    ]
   }
 }
 ```
+
+**Requires [bun](https://bun.sh/)** — hooks are TypeScript, executed directly by bun.
 
 ### CLAUDE.md integration
 
