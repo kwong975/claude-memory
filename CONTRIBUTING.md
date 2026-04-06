@@ -23,7 +23,7 @@ Thanks for your interest in improving claude-memory.
 - New examples showing different workflows
 - Documentation improvements
 - Integration guides for different Claude Code setups
-- Bug fixes in the setup script
+- Bug fixes in install/sync/verify scripts
 
 ### Commit conventions
 

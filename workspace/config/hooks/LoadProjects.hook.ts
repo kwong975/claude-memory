@@ -24,7 +24,6 @@ const MAX_PROJECT_BODY_BYTES = 5120; // 5KB
 
 function detectWorkspace(): string {
   // Detect workspace from first subdirectory under DEV_DIR
-  // e.g., if cwd is /home/user/dev/my-platform/repo, workspace = "my-platform"
   if (cwd.startsWith(devDir)) {
     const relative = cwd.slice(devDir.length + 1);
     const firstSegment = relative.split("/")[0];

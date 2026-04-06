@@ -1,7 +1,7 @@
 /**
  * SessionStart Hook: Display Active Projects
  *
- * Shows a compact project summary as a systemMessage the user sees it
+ * Shows a compact project summary as a systemMessage so Kelly sees it
  * in the terminal at session start.
  */
 

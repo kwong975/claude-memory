@@ -8,9 +8,11 @@ Do not open a public issue for security vulnerabilities.
 
 ## Scope
 
-claude-memory is a set of markdown templates and a shell script. The primary security concern is accidental exposure of personal data in memory files.
+claude-memory is a bootstrap installer for Claude Code configuration. The primary security concern is accidental exposure of personal data in memory files or credentials in config.
 
 **Reminders:**
-- Memory files (`MEMORIES.md`, `decisions.md`, `projects/`, `known-issues/`) are gitignored by default
-- Never commit files containing secrets, API keys, or sensitive personal information
+- Memory seed files (`memory-seed/`) are gitignored by default
+- `global/settings.json` may contain hook paths — verify no secrets before pushing
+- Never commit files containing API keys, tokens, or sensitive personal information
 - Review your `.gitignore` before pushing to a public repository
+- Run `./verify.sh` to check repo integrity before publishing

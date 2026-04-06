@@ -1,258 +1,165 @@
 # claude-memory
 
-A persistent memory and project management system for [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
+A portable bootstrap installer for a Claude Code operating system.
 
-Claude Code is stateless by default — every session starts fresh. **claude-memory** gives it a structured, file-based memory that persists across sessions, so Claude remembers your preferences, tracks your projects, and learns from corrections without you repeating yourself.
+This repo packages the full Claude Code configuration stack — global settings, workspace rules, hooks, repo guardrails, and optionally personal memory — into something you can install on a new machine in one command.
 
-## Why this exists
+## What it installs
 
-After months of daily Claude Code use, a pattern emerged: every session started with re-explaining the same preferences, re-establishing the same architectural decisions, and re-orienting Claude to the same active projects. The built-in auto-memory helps, but it's unstructured and per-project.
+| Layer | What | Where it goes |
+|-------|------|---------------|
+| **Global** | CLAUDE.md, settings.json, slash commands, invariant rules, reference docs | `~/.claude/` |
+| **Workspace** | Workspace CLAUDE.md, contextual rules (Python, TS, frontend, etc.) | `~/dev/` and `~/dev/.claude/` |
+| **Hooks** | 8 Claude Code hooks + shared lib | `~/dev/config/hooks/` |
+| **Repo guardrails** | Per-repo CLAUDE.md files (no source code) | `~/dev/kos-platform/<repo>/CLAUDE.md` |
+| **Memory seed** (optional) | MEMORIES.md, project files, known-issues | `~/dev/claude-memory/` |
 
-claude-memory is a structured alternative — explicit files with clear schemas that you control. Claude reads them at session start and updates them (with your approval) at session end. You own the data, you review every write, and you can version-control the whole thing.
+## What it does NOT include
 
-## What it does
+- Application source code (repos are not packaged — only their CLAUDE.md files)
+- Secrets, API keys, credentials, `.env` files
+- Caches, `node_modules`, `.venv`, build artifacts
+- Machine-specific temp files, session data, telemetry
+- Git history or auth tokens
+- Claude Code internal state (sessions, history, debug logs)
 
-- **Remembers you** — your role, preferences, how you like to work, corrections you've made
-- **Manages projects** — active projects with next steps, logs, and notes files
-- **Tracks known issues** — per-repo gotchas that persist across sessions
-- **Learns from corrections** — when you correct Claude, it proposes a memory update so it doesn't repeat the mistake
+See [EXCLUDED.md](EXCLUDED.md) for the full exclusion list with rationale.
 
-## What it is not
-
-- Not an AI agent or autonomous system — Claude proposes updates, you approve them
-- Not a replacement for documentation — this is operational memory, not docs
-- Not tied to any specific tech stack — it's markdown files with conventions
-
-## Quick start
-
-```bash
-# Clone the repo
-git clone https://github.com/kwong975/claude-memory.git ~/dev/claude-memory
-
-# Run setup to create your personal memory files from templates
-cd ~/dev/claude-memory
-./setup.sh
-
-# Tell Claude Code where to find your memory
-# Add to ~/.claude/settings.json:
-{
-  "env": {
-    "MEMORY_DIR": "/path/to/claude-memory"
-  }
-}
-```
-
-Then edit `MEMORIES.md` to fill in your details, and you're running.
-
-## How it works
-
-```
-Session start
-  └─ Claude reads MEMORIES.md (who you are, preferences, corrections)
-  └─ Claude reads active project files (what you're working on)
-  └─ Claude reads known-issues (gotchas to watch for)
-
-During session
-  └─ Claude works with full context of your preferences and projects
-  └─ When you correct Claude, it notes the correction for later
-
-Session end (/wrapup)
-  └─ Claude proposes updates: project log entries, new corrections, next steps
-  └─ You approve or reject each proposed write
-  └─ Approved updates are written to memory files
-```
-
-## File structure
+## Repo structure
 
 ```
 claude-memory/
-├── MEMORIES.md              # Your preferences, corrections, calibrations (gitignored)
-├── projects/                # Active project tracking (gitignored)
-│   ├── my-project.md        # Project: next steps + log
-│   ├── my-project-notes.md  # Detailed findings and reasoning
-│   └── archive/             # Completed projects
-├── known-issues/            # Per-repo gotchas (gitignored)
-│   └── repo-name.md
-├── hooks/                   # Claude Code hook scripts
-│   ├── LoadProjects.hook.ts
-│   ├── ShowProjects.hook.ts
-│   ├── SafetyNet.hook.ts
-│   ├── AutoLint.hook.ts
-│   ├── StopGate.hook.ts
-│   ├── CompletionCheck.hook.ts
-│   ├── SessionEndReminder.hook.ts
-│   └── lib/                 # Shared utilities
-│       ├── paths.ts
-│       └── log.ts
-├── templates/               # Starting templates for new files
+├── install.sh                  # Install bootstrap onto a machine
+├── sync-from-machine.sh        # Refresh bootstrap from current machine
+├── verify.sh                   # Verify repo structure integrity
+├── bootstrap.config.example    # Documents source/target path mapping
+├── manifest.md                 # What's included, source/target, required/optional
+├── EXCLUDED.md                 # What's excluded and why
+│
+├── global/                     # ~/.claude/ contents
+│   ├── CLAUDE.md
+│   ├── settings.json
+│   ├── commands/               # Slash commands
+│   ├── rules/invariants/       # Global rules
+│   └── reference/              # Reference docs
+│
+├── workspace/                  # ~/dev/ contents
+│   ├── CLAUDE.md
+│   ├── .claude/rules/contextual/   # Language/context rules
+│   └── config/hooks/           # Claude Code hooks
+│
+├── repo-claudes/               # Per-repo CLAUDE.md guardrails
+│   ├── command-centre/
+│   ├── context-engine/
+│   ├── data-layer/
+│   ├── aureus/
+│   ├── skills/
+│   ├── claude-mcp-server/
+│   ├── agent-memory/
+│   └── sni-knowledge/
+│
+├── memory-seed/                # Personal data (gitignored)
 │   ├── MEMORIES.md
-│   ├── projects/_template.md
-│   └── known-issues/_template.md
-└── examples/                # Populated examples showing real usage
-    ├── MEMORIES-example.md
-    └── project-example.md
+│   ├── projects/
+│   └── known-issues/
+│
+├── templates/                  # Blank templates for new memory files
+└── examples/                   # Populated examples showing usage
 ```
 
-### File details
+## Syncing from the current machine
 
-| File | Purpose | Updated by |
-|------|---------|------------|
-| `MEMORIES.md` | Who you are, how you work, corrections | `/wrapup` (with approval) |
-| `projects/<name>.md` | Active project tracking (frontmatter + Next + Log) | `/wrapup` (with approval) |
-| `projects/<name>-notes.md` | Detailed reasoning and findings | `/wrapup` or manual |
-| `known-issues/<repo>.md` | Per-repo gotchas and workarounds | Manual |
+To refresh the bootstrap repo with the latest files from your current machine:
 
-### Project file format
-
-Project files use YAML frontmatter for metadata:
-
-```yaml
----
-workspace: dev          # Which workspace this belongs to
-status: active          # active | paused | complete | reference
-updated: 2026-04-06     # Last updated date
----
+```bash
+cd ~/dev/claude-memory
+./sync-from-machine.sh              # Sync config only
+./sync-from-machine.sh --with-memory # Also snapshot memory files
+./sync-from-machine.sh --dry-run     # Preview without changes
 ```
 
-Followed by markdown sections: `# Title`, `## Purpose`, `## Next` (checklist), `## Log` (dated entries).
+This overwrites files in the bootstrap repo with the live versions. Run this before committing updates.
 
-**Lifecycle:** `active` (Claude suggests work) → `paused` (Claude doesn't suggest) → `complete` (move to `archive/`).
+## Installing on a new machine
 
-### MEMORIES.md sections
+```bash
+# Clone the repo
+git clone https://github.com/kos-platform/claude-memory.git ~/dev/claude-memory
+cd ~/dev/claude-memory
 
-| Section | What goes here |
-|---------|---------------|
-| About You | Name, role, context — helps Claude calibrate tone and depth |
-| Working Principles | How you want Claude to approach work |
-| Explicit Calibrations | Specific rules for specific situations |
-| Stated Preferences | How you prefer things done (tools, style, workflow) |
-| Behavioral Corrections | Mistakes Claude made that it should not repeat |
+# Preview what will be installed
+./install.sh --dry-run
 
-## Integration with Claude Code
+# Install (safe — skips existing files)
+./install.sh
 
-claude-memory is designed to work with Claude Code's existing extension points:
+# Install and overwrite existing files
+./install.sh --force
 
-### Slash commands (optional)
-
-If you use [Claude Code slash commands](https://docs.anthropic.com/en/docs/claude-code/slash-commands), these complement the memory system:
-
-- `/resume` — reads memory + git state to produce a re-entry briefing
-- `/wrapup` — proposes memory updates at session end (approval required)
-- `/reflect` — audits memory for stale, duplicate, or contradictory entries
-- `/audit` — checks system health (file coverage, budgets, hooks)
-- `/design` — structured design thinking before implementation
-
-### Hooks (included)
-
-[Claude Code hooks](https://docs.anthropic.com/en/docs/claude-code/hooks) automate memory loading. Ready-to-use scripts are in `hooks/`:
-
-| Hook | Event | What it does |
-|------|-------|-------------|
-| `LoadProjects.hook.ts` | SessionStart | Loads corrections + active project summaries into context |
-| `ShowProjects.hook.ts` | SessionStart | Displays active projects in terminal |
-| `SafetyNet.hook.ts` | PreToolUse (Bash) | Blocks destructive commands, warns on wrong package managers |
-| `AutoLint.hook.ts` | PostToolUse (Edit/Write) | Auto-formats files after edits (ruff for Python, prettier for TS) |
-| `StopGate.hook.ts` | Stop | Runs lint + tests when Claude stops, warns on failures |
-| `CompletionCheck.hook.ts` | Stop | Catches false completion claims (says "done" with no output) |
-| `SessionEndReminder.hook.ts` | UserPromptSubmit | Prompts for project updates when you signal session end |
-
-To install, add to `~/.claude/settings.json`:
-
-```json
-{
-  "env": {
-    "DEV_DIR": "/path/to/your/dev/directory",
-    "MEMORY_DIR": "/path/to/claude-memory"
-  },
-  "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "",
-        "hooks": [{ "type": "command", "command": "bun /path/to/claude-memory/hooks/LoadProjects.hook.ts" }]
-      },
-      {
-        "matcher": "",
-        "hooks": [{ "type": "command", "command": "bun /path/to/claude-memory/hooks/ShowProjects.hook.ts" }]
-      }
-    ],
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [{ "type": "command", "command": "bun /path/to/claude-memory/hooks/SafetyNet.hook.ts" }]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Edit|Write",
-        "hooks": [{ "type": "command", "command": "bun /path/to/claude-memory/hooks/AutoLint.hook.ts" }]
-      }
-    ],
-    "Stop": [
-      {
-        "matcher": "",
-        "hooks": [{ "type": "command", "command": "bun /path/to/claude-memory/hooks/StopGate.hook.ts" }]
-      },
-      {
-        "matcher": "",
-        "hooks": [{ "type": "command", "command": "bun /path/to/claude-memory/hooks/CompletionCheck.hook.ts" }]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "matcher": "",
-        "hooks": [{ "type": "command", "command": "bun /path/to/claude-memory/hooks/SessionEndReminder.hook.ts" }]
-      }
-    ]
-  }
-}
+# Also install memory seed
+./install.sh --with-memory
 ```
 
-**Requires [bun](https://bun.sh/)** — hooks are TypeScript, executed directly by bun.
+## Optional memory-seed mode
 
-### CLAUDE.md integration
+The `memory-seed/` directory holds personal operational memory:
+- `MEMORIES.md` — preferences, corrections, calibrations
+- `projects/` — active project tracking files
+- `known-issues/` — per-repo gotchas
 
-Reference the memory system in your project or global `CLAUDE.md`:
+This data is **gitignored by default** because it contains personal/project-specific data. To include it:
 
-```markdown
-## Persistent Memory
+1. Sync it: `./sync-from-machine.sh --with-memory`
+2. Install it: `./install.sh --with-memory`
 
-- Preferences, corrections, calibrations → `claude-memory/MEMORIES.md`
-- Always propose exact text and wait for approval before writing to memory files.
+If you want to commit memory-seed to the repo (e.g., for a private repo), remove the `memory-seed/` line from `.gitignore`.
 
-## Project Tracking
+## Safety and overwrite behavior
 
-Project files: `~/dev/claude-memory/projects/`
-- `<project>.md` — frontmatter (workspace, status) + purpose, next steps, log
-- `<project>-notes.md` — detailed findings, reasoning
+- **Default mode**: never overwrites existing files. Prints a warning and skips.
+- **--force**: overwrites existing files without prompting.
+- **--dry-run**: prints every action without touching the filesystem.
+- **Never deletes** anything on the target machine.
+- **Never copies secrets** — credentials, tokens, and env files are excluded at the source.
+- If a target repo directory doesn't exist, the installer warns and skips that repo's CLAUDE.md rather than failing.
 
-When work completes: update Log (one-liner), Next (remaining steps), Notes (detail).
-Lifecycle: active → suggest work | paused → don't suggest | complete → archive.
+## Post-install checks
+
+After installing, verify your setup:
+
+```bash
+# Verify the bootstrap repo itself
+./verify.sh
+
+# Check Claude Code picks up the config
+claude --version  # Confirm Claude Code is installed
+ls ~/.claude/CLAUDE.md  # Global config present
+ls ~/dev/CLAUDE.md  # Workspace config present
+ls ~/dev/config/hooks/*.hook.ts  # Hooks present
 ```
 
-## Customization
+Then start a Claude Code session and confirm:
+- Slash commands work (`/resume`, `/wrapup`, etc.)
+- Hooks fire on session start (you should see project loading)
+- Safety rules are active (try a destructive command to verify SafetyNet)
 
-The system is deliberately simple — markdown files with conventions, not a framework with dependencies.
+## Known limitations
 
-**Add new sections to MEMORIES.md** — the section names are just headers. Add whatever categories make sense for your work.
+- **Path assumptions**: Scripts assume `~/dev/` as the workspace root and `~/dev/kos-platform/` as the repo base. Edit the scripts if your layout differs.
+- **No config file support**: The `bootstrap.config.example` is documentation only. Scripts use hardcoded paths. A future version could read a config file.
+- **No selective install**: You can't install just hooks or just rules. It's all-or-nothing per layer (global, workspace, repo-claudes, memory).
+- **macOS-oriented**: Scripts use `find` and `cp` syntax that works on macOS and Linux. Not tested on Windows/WSL.
+- **Hooks require bun**: All hooks are TypeScript executed by [bun](https://bun.sh/). Install bun on the target machine.
 
-**Change the project file format** — the frontmatter fields (`workspace`, `status`, `updated`) are used by the hooks. Everything else is convention you can adapt.
+## Templates and examples
 
-**Add new known-issues repos** — create `known-issues/<repo-name>.md` for any repo you work with frequently.
+The `templates/` directory contains blank templates for creating new memory files:
+- `MEMORIES.md` — blank memories template
+- `projects/_template.md` — blank project file
+- `known-issues/_template.md` — blank known-issues file
 
-**Adjust budgets** — if you use the `/audit` command, it checks line counts. Default budgets: MEMORIES.md (200 lines), individual files (30 lines), per-repo CLAUDE.md (100 lines). These are guidelines, not hard limits.
-
-## Design principles
-
-1. **Human-in-the-loop** — Claude proposes, you approve. No silent writes to memory.
-2. **Plain text** — everything is markdown. No databases, no binary formats, no dependencies.
-3. **You own the data** — memory files live on your machine, in your repo. Nothing is sent anywhere.
-4. **Minimal structure** — just enough schema to be useful. Not so much that it becomes overhead.
-5. **Composable** — use the parts that help. Skip the parts that don't. Each piece works independently.
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+The `examples/` directory contains populated examples showing what filled-in files look like.
 
 ## License
 
-[MIT](LICENSE) — use it however you want.
+[MIT](LICENSE)

@@ -1,7 +1,25 @@
-# Personal memory data — never commit
+# Personal memory data — never commit (contains personal/project-specific data)
+/memory-seed/
 /MEMORIES.md
 /projects/
 /known-issues/
 
 # OS
 .DS_Store
+
+# Editors
+*.swp
+*.swo
+*~
+
+# Node
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Build artifacts
+dist/
+build/

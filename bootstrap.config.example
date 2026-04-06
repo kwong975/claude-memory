@@ -1,0 +1,40 @@
+# bootstrap.config.example
+# Documentation only — shows the source and target paths used by install.sh and sync-from-machine.sh.
+# No script reads this file. It exists to make the mapping explicit.
+
+# --- Source paths (current machine) ---
+# These are where install.sh and sync-from-machine.sh read from / write to.
+
+global_source       = ~/.claude/
+workspace_source    = ~/dev/
+hooks_source        = ~/dev/config/hooks/
+repo_base_source    = ~/dev/kos-platform/
+memory_source       = ~/dev/claude-memory/
+
+# --- Target paths (new machine, used by install.sh) ---
+# These are where install.sh writes to on a fresh machine.
+
+global_target       = ~/.claude/
+workspace_target    = ~/dev/
+hooks_target        = ~/dev/config/hooks/
+repo_base_target    = ~/dev/kos-platform/
+memory_target       = ~/dev/claude-memory/
+
+# --- Options ---
+
+include_memory_seed = false    # Set to true or use --with-memory flag
+force_overwrite     = false    # Set to true or use --force flag
+
+# --- Repo CLAUDE.md files ---
+# Only the CLAUDE.md guardrail file is copied per repo. No source code.
+
+repos = [
+  command-centre,
+  context-engine,
+  data-layer,
+  aureus,
+  skills,
+  claude-mcp-server,
+  agent-memory,
+  sni-knowledge,
+]
