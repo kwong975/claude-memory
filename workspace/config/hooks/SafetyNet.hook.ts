@@ -110,10 +110,27 @@ const command = input.tool_input?.command?.trim();
 
 if (!command) process.exit(0);
 
+// Strip tokens, keys, passwords from commands before logging
+function sanitizeForLog(cmd: string): string {
+  return cmd
+    .replace(
+      /\b(token|key|password|secret|credential)s?\s*[=:]\s*\S+/gi,
+      "$1=***",
+    )
+    .replace(/\b(Bearer|Basic)\s+\S+/gi, "$1 ***")
+    .replace(/\b[A-Za-z0-9_-]{20,}\b/g, (match) =>
+      /^(node_modules|force-with-lease|pyproject|package)/.test(match)
+        ? match
+        : "***",
+    );
+}
+
 // Check hard block rules first
 for (const rule of BLOCK_RULES) {
   if (rule.pattern.test(command)) {
-    logEvent("SafetyNet", "block", rule.message, { command });
+    logEvent("SafetyNet", "block", rule.message, {
+      command: sanitizeForLog(command),
+    });
     process.stderr.write(rule.message);
     process.exit(2);
   }
@@ -122,7 +139,9 @@ for (const rule of BLOCK_RULES) {
 // Check warn rules
 for (const rule of WARN_RULES) {
   if (rule.pattern.test(command)) {
-    logEvent("SafetyNet", "warn", rule.message, { command });
+    logEvent("SafetyNet", "warn", rule.message, {
+      command: sanitizeForLog(command),
+    });
     const result = JSON.stringify({
       hookSpecificOutput: {
         hookEventName: "PreToolUse",

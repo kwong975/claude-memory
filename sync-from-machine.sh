@@ -39,12 +39,12 @@ for arg in "$@"; do
   esac
 done
 
-# --- Source paths ---
-GLOBAL_SRC="$HOME/.claude"
-WORKSPACE_SRC="$HOME/dev"
-HOOKS_SRC="$HOME/dev/config/hooks"
-REPO_BASE="$HOME/dev/kos-platform"
-MEMORY_SRC="$HOME/dev/claude-memory"
+# --- Source paths (overridable via env vars) ---
+GLOBAL_SRC="${CLAUDE_GLOBAL_DIR:-$HOME/.claude}"
+WORKSPACE_SRC="${CLAUDE_WORKSPACE_DIR:-$HOME/dev}"
+HOOKS_SRC="${CLAUDE_HOOKS_DIR:-$HOME/dev/config/hooks}"
+REPO_BASE="${CLAUDE_REPO_BASE:-$HOME/dev/kos-platform}"
+MEMORY_SRC="${CLAUDE_MEMORY_DIR:-$HOME/dev/claude-memory}"
 
 # --- Helpers ---
 SYNCED=0
@@ -98,18 +98,18 @@ sync_dir() {
   mkdir -p "$dst"
 
   # Copy all files from source
-  find "$src" -type f | while read -r file; do
+  while IFS= read -r file; do
     local rel="${file#$src/}"
     local target="$dst/$rel"
     mkdir -p "$(dirname "$target")"
     cp "$file" "$target"
     log_action "$file -> $target"
     SYNCED=$((SYNCED + 1))
-  done
+  done < <(find "$src" -type f)
 
   # Remove stale files in target that no longer exist in source
   if [ -d "$dst" ]; then
-    find "$dst" -type f | while read -r file; do
+    while IFS= read -r file; do
       local rel="${file#$dst/}"
       if [ ! -f "$src/$rel" ]; then
         if $DRY_RUN; then
@@ -120,7 +120,7 @@ sync_dir() {
           REMOVED=$((REMOVED + 1))
         fi
       fi
-    done
+    done < <(find "$dst" -type f)
   fi
 }
 
@@ -161,8 +161,9 @@ echo "--- Hooks: $HOOKS_SRC -> workspace/config/hooks/ ---"
 for hook in LoadProjects ShowProjects SessionEndReminder AutoLint SafetyNet StopGate CompletionCheck AntiRationalization; do
   sync_file "$HOOKS_SRC/${hook}.hook.ts" "$SCRIPT_DIR/workspace/config/hooks/${hook}.hook.ts"
 done
-sync_file "$HOOKS_SRC/lib/log.ts"   "$SCRIPT_DIR/workspace/config/hooks/lib/log.ts"
-sync_file "$HOOKS_SRC/lib/paths.ts" "$SCRIPT_DIR/workspace/config/hooks/lib/paths.ts"
+sync_file "$HOOKS_SRC/lib/log.ts"      "$SCRIPT_DIR/workspace/config/hooks/lib/log.ts"
+sync_file "$HOOKS_SRC/lib/paths.ts"    "$SCRIPT_DIR/workspace/config/hooks/lib/paths.ts"
+sync_file "$HOOKS_SRC/lib/projects.ts" "$SCRIPT_DIR/workspace/config/hooks/lib/projects.ts"
 echo ""
 
 # --- D. Repo CLAUDE.md files ---

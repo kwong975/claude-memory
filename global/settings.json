@@ -88,7 +88,7 @@
   "skipDangerousModePermissionPrompt": true,
   "statusLine": {
     "type": "command",
-    "command": "npx -y ccstatusline@latest",
+    "command": "npx -y ccstatusline",
     "padding": 0
   }
 }

@@ -44,6 +44,7 @@ Everything included in the bootstrap repo, where it comes from, and where it goe
 | `workspace/config/hooks/AntiRationalization.hook.ts` | `~/dev/config/hooks/AntiRationalization.hook.ts` | `~/dev/config/hooks/AntiRationalization.hook.ts` | Yes |
 | `workspace/config/hooks/lib/log.ts` | `~/dev/config/hooks/lib/log.ts` | `~/dev/config/hooks/lib/log.ts` | Yes |
 | `workspace/config/hooks/lib/paths.ts` | `~/dev/config/hooks/lib/paths.ts` | `~/dev/config/hooks/lib/paths.ts` | Yes |
+| `workspace/config/hooks/lib/projects.ts` | `~/dev/config/hooks/lib/projects.ts` | `~/dev/config/hooks/lib/projects.ts` | Yes |
 
 ## Repo CLAUDE.md guardrails
 

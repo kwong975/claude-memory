@@ -54,11 +54,11 @@ if [ -z "$USER_NAME" ]; then
   fi
 fi
 
-# --- Target paths ---
-GLOBAL_TARGET="$HOME/.claude"
-WORKSPACE_TARGET="$HOME/dev"
-REPO_BASE="$HOME/dev/kos-platform"
-MEMORY_TARGET="$HOME/dev/claude-memory"
+# --- Target paths (overridable via env vars) ---
+GLOBAL_TARGET="${CLAUDE_GLOBAL_DIR:-$HOME/.claude}"
+WORKSPACE_TARGET="${CLAUDE_WORKSPACE_DIR:-$HOME/dev}"
+REPO_BASE="${CLAUDE_REPO_BASE:-$HOME/dev/kos-platform}"
+MEMORY_TARGET="${CLAUDE_MEMORY_DIR:-$HOME/dev/claude-memory}"
 
 # --- Helpers ---
 COPIED=0
@@ -121,7 +121,7 @@ copy_dir() {
   mkdir -p "$dst"
 
   # Copy files preserving structure, respecting --force
-  find "$src" -type f | while read -r file; do
+  while IFS= read -r file; do
     local rel="${file#$src/}"
     local target="$dst/$rel"
 
@@ -134,7 +134,7 @@ copy_dir() {
       log_action "$file -> $target"
       COPIED=$((COPIED + 1))
     fi
-  done
+  done < <(find "$src" -type f)
 }
 
 # --- Header ---
@@ -184,8 +184,9 @@ echo "--- Hooks -> $WORKSPACE_TARGET/config/hooks/ ---"
 for hook in LoadProjects ShowProjects SessionEndReminder AutoLint SafetyNet StopGate CompletionCheck AntiRationalization; do
   copy_file "$SCRIPT_DIR/workspace/config/hooks/${hook}.hook.ts" "$WORKSPACE_TARGET/config/hooks/${hook}.hook.ts"
 done
-copy_file "$SCRIPT_DIR/workspace/config/hooks/lib/log.ts"   "$WORKSPACE_TARGET/config/hooks/lib/log.ts"
-copy_file "$SCRIPT_DIR/workspace/config/hooks/lib/paths.ts" "$WORKSPACE_TARGET/config/hooks/lib/paths.ts"
+copy_file "$SCRIPT_DIR/workspace/config/hooks/lib/log.ts"      "$WORKSPACE_TARGET/config/hooks/lib/log.ts"
+copy_file "$SCRIPT_DIR/workspace/config/hooks/lib/paths.ts"    "$WORKSPACE_TARGET/config/hooks/lib/paths.ts"
+copy_file "$SCRIPT_DIR/workspace/config/hooks/lib/projects.ts" "$WORKSPACE_TARGET/config/hooks/lib/projects.ts"
 echo ""
 
 # --- D. Repo CLAUDE.md files ---

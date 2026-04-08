@@ -12,6 +12,13 @@
 import { readdirSync, readFileSync, existsSync, statSync } from "fs";
 import { join, resolve } from "path";
 import { getDevDir, getMemoryDir } from "./lib/paths";
+import {
+  parseFrontmatter,
+  shouldLoad,
+  extractTitle,
+  extractNextItems,
+  detectWorkspace,
+} from "./lib/projects";
 
 const devDir = getDevDir();
 const memoryDir = getMemoryDir();
@@ -22,65 +29,10 @@ const cwd = resolve(process.cwd());
 // Safety net: skip any project body over this threshold even if frontmatter says active
 const MAX_PROJECT_BODY_BYTES = 5120; // 5KB
 
-function detectWorkspace(): string {
-  // Detect workspace from first subdirectory under DEV_DIR
-  if (cwd.startsWith(devDir)) {
-    const relative = cwd.slice(devDir.length + 1);
-    const firstSegment = relative.split("/")[0];
-    if (firstSegment) return firstSegment;
-  }
-  return "dev";
-}
-
-function parseFrontmatter(content: string): {
-  workspace: string;
-  status: string;
-  body: string;
-} {
-  const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
-  if (!match) return { workspace: "dev", status: "active", body: content };
-
-  const fm = match[1];
-  const body = match[2].trim();
-
-  const workspace = (fm.match(/^workspace:\s*(.+)$/m)?.[1] ?? "dev").trim();
-  const status = (fm.match(/^status:\s*(.+)$/m)?.[1] ?? "active").trim();
-
-  return { workspace, status, body };
-}
-
-function shouldLoad(
-  workspace: string,
-  status: string,
-  currentWorkspace: string,
-): boolean {
-  if (status !== "active") return false;
-  if (workspace === "all") return true;
-  if (workspace === "dev") return true;
-  if (currentWorkspace === "dev") return true;
-  return workspace === currentWorkspace;
-}
-
-function extractNextItems(body: string): string[] {
-  const nextMatch = body.match(/^## Next\n([\s\S]*?)(?=\n## |\n---|\Z)/m);
-  if (!nextMatch) return [];
-  return nextMatch[1]
-    .split("\n")
-    .filter((l) => l.match(/^- \[ \]/))
-    .map((l) => l.replace(/^- \[ \]\s*/, "").trim())
-    .filter(Boolean)
-    .slice(0, 3);
-}
-
-function extractTitle(body: string): string {
-  const m = body.match(/^# (?:Project:\s*)?(.+)$/m);
-  return m ? m[1].trim() : "";
-}
-
 function loadProjectSummaries(): string {
   if (!existsSync(projectsDir)) return "";
 
-  const currentWorkspace = detectWorkspace();
+  const currentWorkspace = detectWorkspace(cwd, devDir);
 
   const files = readdirSync(projectsDir)
     .filter((f) => f.endsWith(".md") && !f.endsWith("-notes.md"))
@@ -138,7 +90,7 @@ function loadCorrections(): string {
     if (match) {
       const body = match[1]
         .split("\n")
-        .filter((l) => l.startsWith("- "))
+        .filter((l) => l.trimStart().startsWith("- "))
         .join("\n");
       if (body.trim()) sections.push(body);
     }

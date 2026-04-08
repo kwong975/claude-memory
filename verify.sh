@@ -109,6 +109,7 @@ for hook in LoadProjects ShowProjects SessionEndReminder AutoLint SafetyNet Stop
 done
 check_file "workspace/config/hooks/lib/log.ts"
 check_file "workspace/config/hooks/lib/paths.ts"
+check_file "workspace/config/hooks/lib/projects.ts"
 echo ""
 
 # --- Repo CLAUDE.md files ---
