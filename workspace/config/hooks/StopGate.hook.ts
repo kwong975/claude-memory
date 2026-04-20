@@ -4,7 +4,9 @@
  * Warn mode: runs fast verification (lint, then tests if lint passes) when Claude stops.
  * Detects repo type from cwd, scopes to touched repo.
  *
- * Always exits 0 (warn, never block). Injects results as additionalContext.
+ * Always exits 0 (warn, never block). Surfaces results via top-level
+ * `systemMessage` (Stop hooks have no `hookSpecificOutput.additionalContext`
+ * slot — that's only valid for UserPromptSubmit/PostToolUse).
  * Times out at 30s. Fails open on any error.
  *
  * Note: Uses execSync intentionally — commands are predefined strings,
@@ -70,11 +72,9 @@ function detectRepo(): RepoInfo {
   return { type: "none", dir: cwd, hasPytest: false, hasJsTest: false };
 }
 
-function run(
-  cmd: string,
-  runCwd: string,
-  timeout: number,
-): { ok: boolean; output: string } {
+type RunResult = { ok: boolean; output: string; timedOut: boolean };
+
+function run(cmd: string, runCwd: string, timeout: number): RunResult {
   try {
     const out = execSync(cmd, {
       cwd: runCwd,
@@ -87,15 +87,20 @@ function run(
       .split("\n")
       .slice(-OUTPUT_LIMIT)
       .join("\n");
-    return { ok: true, output: lines };
+    return { ok: true, output: lines, timedOut: false };
   } catch (err: any) {
-    const output = (err.stdout || err.stderr || err.message || "unknown error")
+    const msg = err.message || "";
+    const timedOut =
+      err.code === "ETIMEDOUT" ||
+      err.signal === "SIGTERM" ||
+      msg.includes("ETIMEDOUT");
+    const output = (err.stdout || err.stderr || msg || "unknown error")
       .toString()
       .trim()
       .split("\n")
       .slice(-OUTPUT_LIMIT)
       .join("\n");
-    return { ok: false, output };
+    return { ok: false, output, timedOut };
   }
 }
 
@@ -117,7 +122,7 @@ if (repo.type === "python" || repo.type === "mixed") {
     Math.min(10000, remainingTimeout),
   );
   remainingTimeout -= Date.now() - start;
-  if (!lint.ok) {
+  if (!lint.ok && !lint.timedOut) {
     lintPassed = false;
     results.push(`Python lint (ruff): FAILED\n${lint.output}`);
   }
@@ -126,13 +131,19 @@ if (repo.type === "python" || repo.type === "mixed") {
 // TS/JS lint
 if (repo.type === "ts" || repo.type === "mixed") {
   const start = Date.now();
-  const lint = run(
-    "npx prettier --check src/ 2>&1 | tail -10",
-    repo.dir,
-    Math.min(10000, remainingTimeout),
-  );
+  // Skip prettier if there's no src/ dir or if the repo is huge (big monorepos
+  // like openclaw cause this hook to ETIMEDOUT uselessly when Claude wasn't
+  // editing there).
+  const hasSrc = existsSync(join(repo.dir, "src"));
+  const lint = hasSrc
+    ? run(
+        "bunx prettier --check src/ 2>&1 | tail -10",
+        repo.dir,
+        Math.min(20000, remainingTimeout),
+      )
+    : { ok: true, output: "", timedOut: false };
   remainingTimeout -= Date.now() - start;
-  if (!lint.ok) {
+  if (!lint.ok && !lint.timedOut) {
     lintPassed = false;
     results.push(`TS format check (prettier): FAILED\n${lint.output}`);
   }
@@ -171,10 +182,7 @@ logEvent("StopGate", "warn", `${results.length} issue(s) in ${repo.dir}`, {
   repoType: repo.type,
 });
 
-const output = JSON.stringify({
-  hookSpecificOutput: {
-    hookEventName: "Stop",
-    additionalContext: message,
-  },
-});
+// Stop hooks have no hookSpecificOutput.additionalContext slot.
+// Use top-level `systemMessage` to surface the warning without blocking.
+const output = JSON.stringify({ systemMessage: message });
 process.stdout.write(output);
